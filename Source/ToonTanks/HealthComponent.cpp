@@ -25,13 +25,38 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
+float UHealthComponent::CalculateEffectiveDamage(float RawDamage, float ArmorRating) const
+{
+    if (RawDamage <= 0.0f) {
+        return 0.0f;
+    }
+
+    const float ClampedArmor = FMath::Clamp(ArmorRating, 0.0f, 0.85f);
+    return RawDamage * (1.0f - ClampedArmor);
+}
+
+void UHealthComponent::Heal(float HealAmount)
+{
+    if (HealAmount <= 0.0f || CurrentHealth <= 0.0f) {
+        return;
+    }
+
+    CurrentHealth = FMath::Min(MaxHealth, CurrentHealth + HealAmount);
+}
+
+float UHealthComponent::GetHealthPercent() const
+{
+    return (MaxHealth > 0.0f) ? (CurrentHealth / MaxHealth) : 0.0f;
+}
+
 void UHealthComponent::DamageTaken(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
     if (Damage <= 0.0f) {
         return;
     }
 
-    CurrentHealth = std::max(0.0f, CurrentHealth - Damage);
+    const float EffectiveDamage = CalculateEffectiveDamage(Damage, Armor);
+    CurrentHealth = FMath::Max(0.0f, CurrentHealth - EffectiveDamage);
 
     if (CurrentHealth <= 0.0f && ToonTanksGameMode) {
         ToonTanksGameMode->ActorDied(DamagedActor);
