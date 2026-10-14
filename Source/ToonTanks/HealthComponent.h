@@ -20,6 +20,15 @@ protected:
 public:
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+    UFUNCTION(BlueprintCallable, Category = "Health")
+    float CalculateEffectiveDamage(float RawDamage, float ArmorRating) const;
+
+    UFUNCTION(BlueprintCallable, Category = "Health")
+    void Heal(float HealAmount);
+
+    UFUNCTION(BlueprintPure, Category = "Health")
+    float GetHealthPercent() const;
+
 private:
     UFUNCTION()
     void DamageTaken(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
@@ -27,6 +36,9 @@ private:
 private:
     UPROPERTY(EditAnywhere)
     float MaxHealth { 100.0f };
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+    float Armor { 0.15f };
 
     float CurrentHealth { 0.0f };
 

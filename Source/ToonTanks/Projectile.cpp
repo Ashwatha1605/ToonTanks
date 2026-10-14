@@ -32,14 +32,27 @@ void AProjectile::BeginPlay()
     }
 }
 
+float AProjectile::CalculateDamage(float BaseDamage, bool bIsCriticalHit, float CriticalMultiplierValue) const
+{
+    if (BaseDamage <= 0.0f) {
+        return 0.0f;
+    }
+
+    const float ValidMultiplier = FMath::Max(1.0f, CriticalMultiplierValue);
+    return bIsCriticalHit ? (BaseDamage * ValidMultiplier) : BaseDamage;
+}
+
 void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
     if (AActor* MyOwner = GetOwner()) {
-        AController* OwnerInstigator = Owner->GetInstigatorController();
+        AController* OwnerInstigator = MyOwner->GetInstigatorController();
         UClass* DamageTypeClass = UDamageType::StaticClass();
 
         if (OtherActor && OtherActor != this && OtherActor != MyOwner) {
-            UGameplayStatics::ApplyDamage(OtherActor, Damage, OwnerInstigator, this, DamageTypeClass);
+            const bool bIsCrit = (FMath::FRand() < CriticalChance);
+            const float AppliedDamage = CalculateDamage(Damage, bIsCrit, CriticalMultiplier);
+
+            UGameplayStatics::ApplyDamage(OtherActor, AppliedDamage, OwnerInstigator, this, DamageTypeClass);
 
             if (HitSound) {
                 UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
@@ -49,7 +62,7 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
                 UGameplayStatics::SpawnEmitterAtLocation(this, HitParticles, GetActorLocation(), GetActorRotation());
             }
 
-            if (HitCameraShakeClass) {
+            if (HitCameraShakeClass && GetWorld() && GetWorld()->GetFirstPlayerController()) {
                 GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(HitCameraShakeClass);
             }
         }

@@ -14,6 +14,9 @@ class TOONTANKS_API AProjectile : public AActor {
 public:
     AProjectile();
 
+    UFUNCTION(BlueprintCallable, Category = "Combat")
+    float CalculateDamage(float BaseDamage, bool bIsCriticalHit, float CriticalMultiplier) const;
+
 protected:
     virtual void BeginPlay() override;
 
@@ -30,8 +33,14 @@ private:
     UPROPERTY(VisibleAnywhere, Category = "Combat")
     class UParticleSystemComponent* TrailParticleSystemComp;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, Category = "Combat")
     float Damage { 50.0f };
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+    float CriticalChance { 0.2f };
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+    float CriticalMultiplier { 1.5f };
 
     UPROPERTY(EditAnywhere, Category = "Combat")
     class UParticleSystem* HitParticles;
